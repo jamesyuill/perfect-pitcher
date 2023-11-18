@@ -7,11 +7,14 @@ let audioContext = null;
 let analyser = null;
 let isListening = false;
 let noteRecorded = false;
-let counter = 0;
+let gameStarted = false;
 let userGuessArray = [];
 let userGuess;
+let song;
+let userScore = 0;
 
 const startGameBtn = document.getElementById('start-game-btn');
+const scoreboardDiv = document.getElementById('scoreboard');
 const gameBody = document.getElementById('gamebody');
 const questionDiv = document.getElementById('question');
 const startGameDiv = document.getElementById('start-game');
@@ -19,22 +22,42 @@ const guessButtonsDiv = document.getElementById('guess-buttons');
 const noteValueDiv = document.getElementById('noteValue');
 const userGuessDiv = document.getElementById('userGuess');
 const userButtons = document.getElementById('userbuttons');
+const answerDiv = document.getElementById('answer');
+const refDiv = document.getElementById('refDiv');
+const nextQuestionDiv = document.getElementById('nextquestion');
 
-startGameBtn.addEventListener('click', startGame);
+//Creating Globally Available DOM Elements
+const makeAGuessBtn = document.createElement('button');
+const playGuessedNote = document.createElement('button');
+const userUse = document.createElement('button');
+const userRetry = document.createElement('button');
+const nextQuestion = document.createElement('button');
+
+startGameBtn.addEventListener('click', () => {
+  startGameDiv.removeChild(startGameBtn);
+  startGame();
+  gameStarted = true;
+});
 
 function startGame() {
-  const song = pickSong();
-  startGameDiv.removeChild(startGameBtn);
+  if (gameStarted) {
+    resetPage();
+  }
+  scoreboardDiv.innerText = `Score: ${userScore}`;
+  song = pickSong();
   displayQuestion(song);
   guessButtons();
 }
 
 function displayQuestion(song) {
-  questionDiv.innerText = song.question;
+  questionDiv.style.visibility = 'visible';
+
+  questionDiv.innerText = `
+  ${song.artist}: ${song.title}\n
+  ${song.question}`;
 }
 
 function guessButtons() {
-  const makeAGuessBtn = document.createElement('button');
   makeAGuessBtn.innerText = 'Sing the note!';
 
   guessButtonsDiv.appendChild(makeAGuessBtn);
@@ -43,9 +66,8 @@ function guessButtons() {
 }
 
 function displayGuess(guess) {
-  userGuessDiv.innerText = `You think that note was ${guess}? Are you correct...`;
+  userGuessDiv.innerText = `So you think that note was ${guess}?`;
 
-  const playGuessedNote = document.createElement('button');
   playGuessedNote.innerText = `Play a ${guess} for reference`;
   playGuessedNote.addEventListener('click', () => {
     let guessWithOctave;
@@ -54,27 +76,71 @@ function displayGuess(guess) {
     } else {
       guessWithOctave = guess + '4';
     }
+    Tone.start();
     synth.triggerAttackRelease(guessWithOctave, '16n');
   });
 
-  const userUse = document.createElement('button');
   userUse.innerText = 'Use Guess';
 
-  userUse.addEventListener('click', checkAnswer);
+  userUse.addEventListener('click', () => {
+    checkAnswer(song, guess);
+  });
 
-  const userRetry = document.createElement('button');
   userRetry.innerText = 'Retry Guess';
 
-  userRetry.addEventListener('click', startListening);
-
-  userButtons.appendChild(playGuessedNote);
+  refDiv.appendChild(playGuessedNote);
   userButtons.appendChild(userUse);
   userButtons.appendChild(userRetry);
+  userRetry.addEventListener('click', () => {
+    refDiv.removeChild(playGuessedNote);
+    userButtons.removeChild(userUse);
+    userButtons.removeChild(userRetry);
+    userGuessDiv.innerText = ``;
+    answerDiv.innerText = ``;
+    startListening();
+  });
 }
 
-function checkAnswer() {}
+function checkAnswer(song, guess) {
+  if (song.noteToGuess === guess) {
+    displayAnswer(true);
+  } else {
+    displayAnswer(false);
+  }
+}
+
+function displayAnswer(answer) {
+  if (answer) {
+    answerDiv.classList = 'correct';
+    answerDiv.innerText = `Congratulations BRO!`;
+    userScore++;
+  } else {
+    answerDiv.classList = 'wrong';
+    answerDiv.innerText = `You is WRONG!\nThe correct answer was ${song.noteToGuess}`;
+  }
+
+  nextQuestion.innerText = 'Next Question';
+  nextQuestion.addEventListener('click', startGame);
+
+  nextQuestionDiv.appendChild(nextQuestion);
+}
+
+function resetPage() {
+  userGuessDiv.innerText = ``;
+  answerDiv.innerText = ``;
+
+  noteValueDiv.textContent = '';
+  guessButtonsDiv.removeChild(makeAGuessBtn);
+  refDiv.removeChild(playGuessedNote);
+  userButtons.removeChild(userUse);
+  userButtons.removeChild(userRetry);
+  nextQuestionDiv.removeChild(nextQuestion);
+}
 
 async function startListening() {
+  noteRecorded = false;
+  userGuess = '';
+
   if (!isListening) {
     try {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -115,7 +181,7 @@ async function startListening() {
           noteValueDiv.textContent = note;
         }
 
-        if (note && volume > 40) {
+        if (note && volume > 33) {
           userGuessArray.push(note);
         }
 

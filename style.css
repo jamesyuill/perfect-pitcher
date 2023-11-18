@@ -6,11 +6,82 @@
 main {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
+  width: 100%;
+  height: 100vh;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 section {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
+  width: 60%;
+}
+
+#question {
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  min-width: 300px;
+  font-size: 1rem;
+  background-color: rgba(0, 174, 255, 0.268);
+  border-radius: 5px;
+  padding: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+#noteValue {
+  font-size: 2rem;
+}
+
+#userGuess {
+  font-size: 1.2rem;
+  width: 90%;
+  padding: 1rem;
+  text-align: center;
+}
+
+#refDiv {
+}
+
+#userbuttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  width: 60%;
+}
+
+#answer {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.correct {
+  color: green;
+}
+
+.wrong {
+  color: red;
+}
+
+button {
+  padding: 0.3rem;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  border: none;
+  background-color: rgb(153, 187, 221);
+}
+
+button:hover {
+  background-color: rgb(194, 214, 234);
 }
