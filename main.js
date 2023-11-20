@@ -204,7 +204,7 @@ async function startListening() {
           noteValueDiv.textContent = note;
         }
 
-        if (note && volume > 33) {
+        if (note && volume > 34) {
           userGuessArray.push(note);
         }
 
