@@ -16,6 +16,7 @@ header {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 section {
@@ -34,7 +35,7 @@ section {
   width: 90%;
   min-width: 300px;
   font-size: 1rem;
-  background-color: rgba(0, 174, 255, 0.268);
+  box-shadow: 1px 1px 3px rgb(121, 120, 120);
   border-radius: 5px;
   padding: 1rem;
   padding-bottom: 1.5rem;
@@ -45,10 +46,13 @@ section {
 }
 
 #userGuess {
+  visibility: hidden;
   font-size: 1.2rem;
   width: 90%;
   padding: 1rem;
   text-align: center;
+  box-shadow: 1px 1px 3px rgb(121, 120, 120);
+  border-radius: 5px;
 }
 
 #refDiv {
@@ -58,7 +62,7 @@ section {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  width: 60%;
+  width: 80%;
 }
 
 #answer {
@@ -79,9 +83,55 @@ button {
   border-radius: 5px;
   font-size: 1.2rem;
   border: none;
-  background-color: rgb(153, 187, 221);
+  background-color: rgb(38, 220, 96);
 }
 
 button:hover {
-  background-color: rgb(194, 214, 234);
+  background-color: rgb(174, 235, 194);
+}
+
+.usebtn {
+  width: 100px;
+}
+
+.retrybtn {
+  width: 100px;
+}
+
+#endgamecontainer {
+  display: none;
+
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.264);
+  z-index: 1;
+}
+
+#endgamemodal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: white;
+  color: black;
+  width: 40%;
+  height: 40%;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  box-shadow: 1px 1px 5px black;
+}
+
+#gameover {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+#finalscore {
 }

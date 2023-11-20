@@ -1,4 +1,4 @@
-import { pickSong } from './utils/pickSong';
+import { songs } from './songsData/tempSongs';
 import * as Tone from 'tone';
 import { synth } from './synth/synth';
 
@@ -12,6 +12,8 @@ let userGuessArray = [];
 let userGuess;
 let song;
 let userScore = 0;
+let maxQuestionsAsked = 3;
+let questionsAsked = 0;
 
 const startGameBtn = document.getElementById('start-game-btn');
 const scoreboardDiv = document.getElementById('scoreboard');
@@ -25,6 +27,10 @@ const userButtons = document.getElementById('userbuttons');
 const answerDiv = document.getElementById('answer');
 const refDiv = document.getElementById('refDiv');
 const nextQuestionDiv = document.getElementById('nextquestion');
+const endGameModal = document.getElementById('endgamemodal');
+const endGameContainer = document.getElementById('endgamecontainer');
+const finalScoreDiv = document.getElementById('finalscore');
+const gameoverDiv = document.getElementById('gameover');
 
 //Creating Globally Available DOM Elements
 const makeAGuessBtn = document.createElement('button');
@@ -35,16 +41,21 @@ const nextQuestion = document.createElement('button');
 
 startGameBtn.addEventListener('click', () => {
   startGameDiv.removeChild(startGameBtn);
+  Tone.start();
   startGame();
+  userScore = 0;
   gameStarted = true;
 });
 
 function startGame() {
   if (gameStarted) {
     resetPage();
+    questionsAsked++;
   }
   scoreboardDiv.innerText = `Score: ${userScore}`;
+
   song = pickSong();
+
   displayQuestion(song);
   guessButtons();
 }
@@ -66,32 +77,41 @@ function guessButtons() {
 }
 
 function displayGuess(guess) {
+  if (guessButtonsDiv.children.length > 0) {
+    guessButtonsDiv.removeChild(makeAGuessBtn);
+  }
+
+  userGuessDiv.style.visibility = 'visible';
   userGuessDiv.innerText = `So you think that note was ${guess}?`;
 
   playGuessedNote.innerText = `Play a ${guess} for reference`;
   playGuessedNote.addEventListener('click', () => {
     let guessWithOctave;
+
     if (guess === 'A' || guess === 'B') {
       guessWithOctave = guess + '5';
     } else {
       guessWithOctave = guess + '4';
     }
-    Tone.start();
+
     synth.triggerAttackRelease(guessWithOctave, '16n');
   });
-
-  userUse.innerText = 'Use Guess';
+  userUse.classList = 'usebtn';
+  userUse.innerText = 'Use';
 
   userUse.addEventListener('click', () => {
     checkAnswer(song, guess);
   });
 
-  userRetry.innerText = 'Retry Guess';
+  userRetry.classList = 'retrybtn';
+  userRetry.innerText = 'Retry';
 
   refDiv.appendChild(playGuessedNote);
   userButtons.appendChild(userUse);
   userButtons.appendChild(userRetry);
   userRetry.addEventListener('click', () => {
+    userGuessDiv.style.visibility = 'hidden';
+
     refDiv.removeChild(playGuessedNote);
     userButtons.removeChild(userUse);
     userButtons.removeChild(userRetry);
@@ -114,23 +134,30 @@ function displayAnswer(answer) {
     answerDiv.classList = 'correct';
     answerDiv.innerText = `Congratulations BRO!`;
     userScore++;
-  } else {
+  } else if (!answer) {
     answerDiv.classList = 'wrong';
     answerDiv.innerText = `You is WRONG!\nThe correct answer was ${song.noteToGuess}`;
   }
 
-  nextQuestion.innerText = 'Next Question';
-  nextQuestion.addEventListener('click', startGame);
+  if (questionsAsked === maxQuestionsAsked) {
+    endGameContainer.style.display = 'flex';
 
-  nextQuestionDiv.appendChild(nextQuestion);
+    gameoverDiv.innerText = 'Game Over!';
+    finalScoreDiv.innerText = `You scored a very healthy ${userScore}!`;
+  } else {
+    nextQuestion.innerText = 'Next Question';
+    nextQuestion.addEventListener('click', startGame);
+
+    nextQuestionDiv.appendChild(nextQuestion);
+  }
 }
 
 function resetPage() {
   userGuessDiv.innerText = ``;
   answerDiv.innerText = ``;
+  userGuessDiv.style.visibility = 'hidden';
 
   noteValueDiv.textContent = '';
-  guessButtonsDiv.removeChild(makeAGuessBtn);
   refDiv.removeChild(playGuessedNote);
   userButtons.removeChild(userUse);
   userButtons.removeChild(userRetry);
@@ -151,8 +178,6 @@ async function startListening() {
       analyser.fftSize = 2048;
       source.connect(analyser);
 
-      // analyser.connect(audioContext.destination);
-
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
@@ -166,13 +191,11 @@ async function startListening() {
         }
 
         const volume = Math.sqrt(sum / dataArray.length);
-        console.log(volume);
+        // console.log(volume);
         const maxFrequency = indexOfMax(dataArray);
         const pitch =
           (maxFrequency * audioContext.sampleRate) / analyser.fftSize;
-        // pitchValue.textContent = pitch.toFixed(2) + ' Hz';
 
-        // Convert pitch to a musical note (simplified)
         let note = frequencyToNote(pitch);
 
         if (!note) {
@@ -187,7 +210,7 @@ async function startListening() {
 
         if (userGuessArray.length > 0) {
           let obj = {};
-          let el;
+          let userNote;
           let max = 0;
           for (let i = 0; i < userGuessArray.length; i++) {
             if (!obj[userGuessArray[i]]) obj[userGuessArray[i]] = 1;
@@ -197,31 +220,18 @@ async function startListening() {
           for (const i in obj) {
             if (max < obj[i]) {
               max = obj[i];
-              el = i;
+              userNote = i;
             }
           }
 
-          userGuess = el;
+          userGuess = userNote;
           noteRecorded = true;
           userGuessArray = [];
         }
 
-        // if (!noteReached) {
-        //   if (noteName === 'F#' && volume > 35) {
-        //     resultDiv.innerText = 'Access Granted';
-        //     noteReached = true;
-        //   } else {
-        //     resultDiv.innerText = 'Access Denied';
-        //   }
-        // }
-
-        // if (noteRecorded && counter === 0) {
-        //   enterDiv.appendChild(enterBtn);
-        //   counter++;
-        //   stopListening();
-        // }
         if (noteRecorded) {
           stopListening();
+
           displayGuess(userGuess);
         } else {
           requestAnimationFrame(updatePitch);
@@ -278,3 +288,11 @@ function frequencyToNote(frequency) {
   //   const octave = Math.floor((noteIndex + 12) / 12);
   return noteName;
 }
+
+const pickSong = () => {
+  const chosenSong = songs.splice(
+    Math.floor(Math.random() * songs.length - 1),
+    1
+  );
+  return chosenSong[0];
+};
